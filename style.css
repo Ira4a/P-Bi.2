@@ -1,0 +1,17 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #eee;
+  font-family: sans-serif;
+}
+
+.toolbar, .frame-controls, .playback {
+  margin: 10px;
+}
+
+canvas {
+  border: 1px solid #333;
+  background: white;
+  cursor: crosshair;
+}
