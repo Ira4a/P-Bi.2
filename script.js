@@ -245,31 +245,34 @@ function togglePlay() {
 }
 
 // Экспорт в GIF
-function testGIF() {
+function exportGIF() {
+  if (frames.length === 0) {
+    alert('Нет кадров!');
+    return;
+  }
+
   const gif = new GIF({
     workers: 2,
     quality: 10,
-    width: 100,
-    height: 100,
+    width: canvas.width,
+    height: canvas.height,
     workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
   });
 
-  const c = document.createElement('canvas');
-  c.width = 100;
-  c.height = 100;
-  const cx = c.getContext('2d');
-
-  for(let i=0; i<5; i++) {
-    cx.fillStyle = `rgb(${i*50},0,0)`;
-    cx.fillRect(0,0,100,100);
-    gif.addFrame(cx, {delay: 300});
+  for (const frame of frames) {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.putImageData(frame, 0, 0);
+    gif.addFrame(offCtx, { delay: 300 });
   }
 
-  gif.on('finished', function(blob) {
+  gif.on('finished', function (blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'test.gif';
+    a.download = 'animation.gif';
     a.click();
     URL.revokeObjectURL(url);
   });
