@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Canvas Animator</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
 </head>
 <body>
 
@@ -27,10 +26,12 @@
   <div id="framesContainer" class="frames-container"></div>
 
   <div class="playback">
-    <button onclick="togglePlay()">▶️/⏸️</button>
+    <button onclick="togglePlay()" id="playPauseBtn">▶️</button>
     <button onclick="exportGIF()">🎞️ Экспорт GIF</button>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="script.js"></script>
+
 </body>
 </html>
