@@ -1,14 +1,24 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-let frames = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+const framesContainer = document.getElementById('framesContainer');
+const playPauseBtn = document.getElementById('playPauseBtn');
+
+let frames = [];
 let currentFrame = 0;
 let tool = 'brush';
 let currentColor = '#000000';
 let playing = false;
-let interval = null;
+let playInterval = null;
 
-const framesContainer = document.getElementById('framesContainer');
+function createEmptyFrame() {
+  return ctx.createImageData(canvas.width, canvas.height);
+}
+
+// Инициализация с пустым кадром
+frames.push(createEmptyFrame());
+drawFrame(0);
+updateFramesPanel();
 
 function selectTool(t) {
   tool = t;
@@ -18,7 +28,103 @@ function selectColor(color) {
   currentColor = color;
 }
 
-canvas.addEventListener('mousedown', (e) => {
+function drawFrame(index) {
+  ctx.putImageData(frames[index], 0, 0);
+  currentFrame = index;
+}
+
+function saveCurrentFrame() {
+  frames[currentFrame] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function updateFramesPanel() {
+  framesContainer.innerHTML = '';
+
+  frames.forEach((frameData, i) => {
+    const thumbDiv = document.createElement('div');
+    thumbDiv.className = 'frame-thumb' + (i === currentFrame ? ' selected' : '');
+    thumbDiv.title = `Кадр ${i + 1}`;
+
+    thumbDiv.addEventListener('click', () => {
+      saveCurrentFrame();
+      drawFrame(i);
+      updateFramesPanel();
+    });
+
+    // Создаем мини-канвас для превью
+    const thumbCanvas = document.createElement('canvas');
+    thumbCanvas.width = 80;
+    thumbCanvas.height = 60;
+    const thumbCtx = thumbCanvas.getContext('2d');
+
+    // Нарисовать масштабированный кадр
+    // Создаем временный canvas для масштабирования
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.putImageData(frameData, 0, 0);
+
+    thumbCtx.clearRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+    thumbCtx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height, 0, 0, thumbCanvas.width, thumbCanvas.height);
+
+    thumbDiv.appendChild(thumbCanvas);
+
+    // Кнопка удаления
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '×';
+    delBtn.title = 'Удалить кадр';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteFrame(i);
+    });
+
+    thumbDiv.appendChild(delBtn);
+
+    framesContainer.appendChild(thumbDiv);
+  });
+}
+
+function deleteFrame(index) {
+  if (frames.length === 1) {
+    alert('Нельзя удалить последний кадр');
+    return;
+  }
+  frames.splice(index, 1);
+  if (currentFrame >= frames.length) {
+    currentFrame = frames.length - 1;
+  }
+  drawFrame(currentFrame);
+  updateFramesPanel();
+}
+
+function addFrame() {
+  saveCurrentFrame();
+  const empty = createEmptyFrame();
+  frames.splice(currentFrame + 1, 0, empty);
+  drawFrame(currentFrame + 1);
+  updateFramesPanel();
+}
+
+function prevFrame() {
+  if (currentFrame > 0) {
+    saveCurrentFrame();
+    drawFrame(currentFrame - 1);
+    updateFramesPanel();
+  }
+}
+
+function nextFrame() {
+  if (currentFrame < frames.length - 1) {
+    saveCurrentFrame();
+    drawFrame(currentFrame + 1);
+    updateFramesPanel();
+  }
+}
+
+canvas.onmousedown = (e) => {
+  if (playing) return; // Блокируем рисование при проигрывании
+
   const rect = canvas.getBoundingClientRect();
   const startX = e.clientX - rect.left;
   const startY = e.clientY - rect.top;
@@ -37,15 +143,16 @@ canvas.addEventListener('mousedown', (e) => {
   ctx.lineWidth = tool === 'brush' ? 10 : 2;
 
   ctx.beginPath();
+
   if (tool === 'eraser') {
     ctx.clearRect(startX - 5, startY - 5, 10, 10);
   } else {
     ctx.moveTo(startX, startY);
   }
 
-  function draw(e) {
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  function onMouseMove(eMove) {
+    const x = eMove.clientX - rect.left;
+    const y = eMove.clientY - rect.top;
 
     if (tool === 'eraser') {
       ctx.clearRect(x - 5, y - 5, 10, 10);
@@ -55,115 +162,14 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
 
-  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mousemove', onMouseMove);
 
   document.addEventListener('mouseup', () => {
-    canvas.removeEventListener('mousemove', draw);
+    canvas.removeEventListener('mousemove', onMouseMove);
     saveCurrentFrame();
     updateFramesPanel();
   }, { once: true });
-});
-
-function saveCurrentFrame() {
-  frames[currentFrame] = ctx.getImageData(0, 0, canvas.width, canvas.height);
-}
-
-function updateFramesPanel() {
-  framesContainer.innerHTML = '';
-  frames.forEach((frame, index) => {
-    const thumbDiv = document.createElement('div');
-    thumbDiv.className = 'frame-thumb' + (index === currentFrame ? ' selected' : '');
-    thumbDiv.title = `Кадр ${index + 1}`;
-    thumbDiv.addEventListener('click', () => {
-      saveCurrentFrame();
-      currentFrame = index;
-      ctx.putImageData(frames[currentFrame], 0, 0);
-      updateFramesPanel();
-    });
-
-    const thumbCanvas = document.createElement('canvas');
-    thumbCanvas.width = 160;
-    thumbCanvas.height = 120;
-    const thumbCtx = thumbCanvas.getContext('2d');
-    // Рисуем миниатюру с масштабом
-    thumbCtx.putImageData(frame, 0, 0);
-    // Масштабирование вручную
-    const scaleX = thumbCanvas.width / canvas.width;
-    const scaleY = thumbCanvas.height / canvas.height;
-    const scaledImage = thumbCtx.getImageData(0, 0, canvas.width, canvas.height);
-    thumbCtx.clearRect(0, 0, thumbCanvas.width, thumbCanvas.height);
-    thumbCtx.putImageData(scaledImage, 0, 0);
-    thumbCtx.scale(scaleX, scaleY);
-    thumbCtx.drawImage(thumbCanvas, 0, 0);
-    thumbCtx.setTransform(1, 0, 0, 1, 0, 0); // сброс трансформации
-
-    thumbDiv.appendChild(thumbCanvas);
-
-    // Кнопка удаления
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '×';
-    delBtn.title = 'Удалить кадр';
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteFrameAt(index);
-    });
-    thumbDiv.appendChild(delBtn);
-
-    framesContainer.appendChild(thumbDiv);
-  });
-}
-
-function deleteFrameAt(index) {
-  if (frames.length <= 1) {
-    alert('Нельзя удалить последний кадр');
-    return;
-  }
-  frames.splice(index, 1);
-  if (currentFrame >= frames.length) currentFrame = frames.length - 1;
-  ctx.putImageData(frames[currentFrame], 0, 0);
-  updateFramesPanel();
-}
-
-function addFrame() {
-  saveCurrentFrame();
-  currentFrame++;
-  const empty = ctx.createImageData(canvas.width, canvas.height);
-  frames.splice(currentFrame, 0, empty);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  updateFramesPanel();
-}
-
-function prevFrame() {
-  if (currentFrame > 0) {
-    saveCurrentFrame();
-    currentFrame--;
-    ctx.putImageData(frames[currentFrame], 0, 0);
-    updateFramesPanel();
-  }
-}
-
-function nextFrame() {
-  if (currentFrame < frames.length - 1) {
-    saveCurrentFrame();
-    currentFrame++;
-    ctx.putImageData(frames[currentFrame], 0, 0);
-    updateFramesPanel();
-  }
-}
-
-function togglePlay() {
-  if (playing) {
-    clearInterval(interval);
-    playing = false;
-  } else {
-    playing = true;
-    let i = 0;
-    interval = setInterval(() => {
-      ctx.putImageData(frames[i], 0, 0);
-      i = (i + 1) % frames.length;
-    }, 200);
-  }
-}
+};
 
 // Flood fill (заливка)
 function floodFill(x, y, fillColor) {
@@ -172,11 +178,10 @@ function floodFill(x, y, fillColor) {
   const width = canvas.width;
   const height = canvas.height;
 
-  // Преобразуем цвет #RRGGBB в [r,g,b,a]
   function hexToRgba(hex) {
-    let r = parseInt(hex.substr(1, 2), 16);
-    let g = parseInt(hex.substr(3, 2), 16);
-    let b = parseInt(hex.substr(5, 2), 16);
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
     return [r, g, b, 255];
   }
 
@@ -222,21 +227,46 @@ function floodFill(x, y, fillColor) {
   ctx.putImageData(imageData, 0, 0);
 }
 
-// Экспорт в GIF с помощью gif.js
+function togglePlay() {
+  if (playing) {
+    clearInterval(playInterval);
+    playing = false;
+    playPauseBtn.textContent = '▶️';
+  } else {
+    playing = true;
+    playPauseBtn.textContent = '⏸️';
+    let i = 0;
+    playInterval = setInterval(() => {
+      drawFrame(i);
+      updateFramesPanel();
+      i = (i + 1) % frames.length;
+    }, 200);
+  }
+}
+
+// Экспорт в GIF
 function exportGIF() {
+  if (frames.length === 0) {
+    alert('Нет кадров для экспорта');
+    return;
+  }
+
+  saveCurrentFrame();
+
   const gif = new GIF({
     workers: 2,
     quality: 10,
     width: canvas.width,
-    height: canvas.height
+    height: canvas.height,
+    workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
   });
 
-  frames.forEach(frame => {
-    const offscreenCanvas = document.createElement('canvas');
-    offscreenCanvas.width = canvas.width;
-    offscreenCanvas.height = canvas.height;
-    const offCtx = offscreenCanvas.getContext('2d');
-    offCtx.putImageData(frame, 0, 0);
+  frames.forEach(frameData => {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.putImageData(frameData, 0, 0);
     gif.addFrame(offCtx, {delay: 200});
   });
 
@@ -251,7 +281,3 @@ function exportGIF() {
 
   gif.render();
 }
-
-// Инициализация
-updateFramesPanel();
-ctx.putImageData(frames[0], 0, 0);
