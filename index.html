@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Canvas Animator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="selectTool('brush')">Кисть</button>
+    <button onclick="selectTool('pencil')">Карандаш</button>
+    <button onclick="selectTool('fill')">Заливка</button>
+    <button onclick="selectTool('eraser')">Ластик</button>
+  </div>
+
+  <canvas id="canvas" width="600" height="400"></canvas>
+
+  <div class="frame-controls">
+    <button onclick="prevFrame()">←</button>
+    <button onclick="addFrame()">＋</button>
+    <button onclick="nextFrame()">→</button>
+  </div>
+
+  <div class="playback">
+    <button onclick="togglePlay()">▶️/⏸️</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
