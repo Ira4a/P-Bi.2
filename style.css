@@ -1,8 +1,10 @@
 body {
   font-family: sans-serif;
   display: flex;
+  height: 100vh;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   background: #eee;
   margin: 20px;
 }
