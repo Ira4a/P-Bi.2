@@ -245,39 +245,32 @@ function togglePlay() {
 }
 
 // Экспорт в GIF
-function exportGIF() {
-  if (frames.length === 0) {
-    alert('Нет кадров для экспорта');
-    return;
-  }
-
-  saveCurrentFrame();
-
+function testGIF() {
   const gif = new GIF({
     workers: 2,
     quality: 10,
-    width: canvas.width,
-    height: canvas.height,
+    width: 100,
+    height: 100,
     workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
   });
 
-  frames.forEach(frameData => {
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = canvas.width;
-    offCanvas.height = canvas.height;
-    const offCtx = offCanvas.getContext('2d');
-    offCtx.putImageData(frameData, 0, 0);
-    gif.addFrame(offCtx, {delay: 200});
-  });
+  const c = document.createElement('canvas');
+  c.width = 100;
+  c.height = 100;
+  const cx = c.getContext('2d');
+
+  for(let i=0; i<5; i++) {
+    cx.fillStyle = `rgb(${i*50},0,0)`;
+    cx.fillRect(0,0,100,100);
+    gif.addFrame(cx, {delay: 300});
+  }
 
   gif.on('finished', function(blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'animation.gif';
-    document.body.appendChild(a);
+    a.download = 'test.gif';
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 
