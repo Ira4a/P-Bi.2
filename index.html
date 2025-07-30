@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <title>Canvas Animator</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
 </head>
 <body>
   <div class="toolbar">
@@ -11,6 +12,7 @@
     <button onclick="selectTool('pencil')">Карандаш</button>
     <button onclick="selectTool('fill')">Заливка</button>
     <button onclick="selectTool('eraser')">Ластик</button>
+    <input type="color" id="colorPicker" value="#000000" onchange="selectColor(this.value)" />
   </div>
 
   <canvas id="canvas" width="600" height="400"></canvas>
@@ -19,10 +21,14 @@
     <button onclick="prevFrame()">←</button>
     <button onclick="addFrame()">＋</button>
     <button onclick="nextFrame()">→</button>
+    <button onclick="deleteFrame()">🗑️</button>
+    <button onclick="moveFrameLeft()">⬅️⮕</button>
+    <button onclick="moveFrameRight()">⮕➡️</button>
   </div>
 
   <div class="playback">
     <button onclick="togglePlay()">▶️/⏸️</button>
+    <button onclick="exportGIF()">🎞️ Экспорт GIF</button>
   </div>
 
   <script src="script.js"></script>
