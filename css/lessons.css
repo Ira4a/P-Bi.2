@@ -1,0 +1,16 @@
+body {
+  font-family: sans-serif;
+  background: #eef;
+  padding: 20px;
+}
+#lessonList button {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  font-weight: bold;
+}
+canvas {
+  max-width: 500px;
+  margin-top: 20px;
+  background: white;
+}
