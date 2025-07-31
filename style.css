@@ -55,3 +55,7 @@ canvas {
   border-radius: 3px;
   line-height: 1;
 }
+.controls button {
+  margin: 5px;
+  padding: 10px 20px;
+}
