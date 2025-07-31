@@ -244,38 +244,30 @@ function togglePlay() {
   }
 }
 
-// Экспорт в GIF
-function exportGIF() {
-  if (frames.length === 0) {
-    alert('Нет кадров!');
-    return;
-  }
 
-  const gif = new GIF({
-    workers: 2,
-    quality: 10,
-    width: canvas.width,
-    height: canvas.height,
-    workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+function startCapture() {
+  t = 0;
+  if (capturing) return;
+
+  capturer = new CCapture({
+    format: 'webm', // 👉 или 'gif', 'png'
+    framerate: 60,
+    verbose: true
   });
 
-  for (const frame of frames) {
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = canvas.width;
-    offCanvas.height = canvas.height;
-    const offCtx = offCanvas.getContext('2d');
-    offCtx.putImageData(frame, 0, 0);
-    gif.addFrame(offCtx, { delay: 300 });
-  }
+  capturing = true;
+  capturer.start();
+  drawFrame();
+  console.log('🟢 Запись началась');
+}
 
-  gif.on('finished', function (blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'animation.gif';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+function stopCapture() {
+  if (!capturing) return;
 
-  gif.render();
+  cancelAnimationFrame(animationId);
+  capturing = false;
+
+  capturer.stop();
+  capturer.save();
+  console.log('✅ Запись завершена и сохранена');
 }
