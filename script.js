@@ -15,10 +15,6 @@ function createEmptyFrame() {
   return ctx.createImageData(canvas.width, canvas.height);
 }
 
-// если кадры как <canvas> в frames[]
-const img = new Image();
-img.src = frames[i].toDataURL();
-
 // Инициализация с пустым кадром
 frames.push(createEmptyFrame());
 drawFrame(0);
@@ -231,6 +227,8 @@ function floodFill(x, y, fillColor) {
   ctx.putImageData(imageData, 0, 0);
 }
 
+//экспорт 
+
 document.getElementById("export").onclick = () => {
   if (frames.length === 0) {
     alert("Нет кадров для экспорта!");
@@ -238,7 +236,7 @@ document.getElementById("export").onclick = () => {
   }
 
   const capturer = new CCapture({
-    format: "webm", // или 'gif'
+    format: "webm", // или "gif"
     framerate: 5,
     verbose: true
   });
@@ -252,19 +250,15 @@ document.getElementById("export").onclick = () => {
       return;
     }
 
-    const img = new Image();
-    img.src = frames[i]; // если frames[] содержит dataURL строку
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-      capturer.capture(canvas);
-      i++;
-      setTimeout(renderNext, 200); // 5 fps
-    };
+    // Отрисовываем ImageData на canvas
+    ctx.putImageData(frames[i], 0, 0);
+
+    capturer.capture(canvas);
+    i++;
+
+    setTimeout(renderNext, 200); // 5 fps
   }
 
   capturer.start();
   renderNext();
 };
-
-
