@@ -15,6 +15,10 @@ function createEmptyFrame() {
   return ctx.createImageData(canvas.width, canvas.height);
 }
 
+// если кадры как <canvas> в frames[]
+const img = new Image();
+img.src = frames[i].toDataURL();
+
 // Инициализация с пустым кадром
 frames.push(createEmptyFrame());
 drawFrame(0);
@@ -227,47 +231,40 @@ function floodFill(x, y, fillColor) {
   ctx.putImageData(imageData, 0, 0);
 }
 
-function togglePlay() {
-  if (playing) {
-    clearInterval(playInterval);
-    playing = false;
-    playPauseBtn.textContent = '▶️';
-  } else {
-    playing = true;
-    playPauseBtn.textContent = '⏸️';
-    let i = 0;
-    playInterval = setInterval(() => {
-      drawFrame(i);
-      updateFramesPanel();
-      i = (i + 1) % frames.length;
-    }, 200);
+document.getElementById("export").onclick = () => {
+  if (frames.length === 0) {
+    alert("Нет кадров для экспорта!");
+    return;
   }
-}
 
-
-function startCapture() {
-  t = 0;
-  if (capturing) return;
-
-  capturer = new CCapture({
-    format: 'webm', // 👉 или 'gif', 'png'
-    framerate: 60,
+  const capturer = new CCapture({
+    format: "webm", // или 'gif'
+    framerate: 5,
     verbose: true
   });
 
-  capturing = true;
+  let i = 0;
+
+  function renderNext() {
+    if (i >= frames.length) {
+      capturer.stop();
+      capturer.save();
+      return;
+    }
+
+    const img = new Image();
+    img.src = frames[i]; // если frames[] содержит dataURL строку
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      capturer.capture(canvas);
+      i++;
+      setTimeout(renderNext, 200); // 5 fps
+    };
+  }
+
   capturer.start();
-  drawFrame();
-  console.log('🟢 Запись началась');
-}
+  renderNext();
+};
 
-function stopCapture() {
-  if (!capturing) return;
 
-  cancelAnimationFrame(animationId);
-  capturing = false;
-
-  capturer.stop();
-  capturer.save();
-  console.log('✅ Запись завершена и сохранена');
-}
