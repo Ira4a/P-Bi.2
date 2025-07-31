@@ -27,10 +27,14 @@
 
   <div class="playback">
     <button onclick="togglePlay()" id="playPauseBtn">▶️</button>
-    <button onclick="exportGIF()">Экспорт GIF</button>
+  </div>
+    
+  <div class="controls">
+    <button onclick="startCapture()">Старт записи</button>
+    <button onclick="stopCapture()">Стоп и сохранить</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
   <script src="script.js"></script>
 
 </body>
